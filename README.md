@@ -24,6 +24,12 @@ yay -S vpn-shell
 
 Copy the script to any directory in your `$PATH`
 
+## Requirements
+
+- Linux kernel with WireGuard support (5.6+)
+- A standard WireGuard `.conf` file compatible with `wg-quick`, as exported by ProtonVPN, Mullvad, or similar (single-peer configs only)
+- `sudo` rights for the invoking user (needed to create and configure network namespaces)
+
 ### Dependencies
 
 | Package | Purpose |
@@ -35,11 +41,13 @@ Copy the script to any directory in your `$PATH`
 | `util-linux` | `runuser` for dropping privileges inside the namespace |
 | `sudo` | privilege escalation for namespace setup |
 
-## Requirements
+## Usage
 
-- Linux kernel with WireGuard support (5.6+)
-- A standard WireGuard `.conf` file compatible with `wg-quick`, as exported by ProtonVPN, Mullvad, or similar (single-peer configs only)
-- `sudo` rights for the invoking user (needed to create and configure network namespaces)
+```
+vpn-shell [-c wg.conf] [command...]
+```
+
+Opens an interactive shell inside the VPN namespace. If a command is given it runs that command instead and exits when it finishes.
 
 ### Config selection
 
@@ -50,14 +58,6 @@ The config file is resolved in this order:
 3. Auto-detection: if exactly one `.conf` file exists in `~/.config/wireguard/` (respecting `$XDG_CONFIG_HOME`) it is used automatically
 
 If multiple configs are found and none is specified, the script exits with an error listing the directory.
-
-## Usage
-
-```
-vpn-shell [-c wg.conf] [command...]
-```
-
-Opens an interactive shell inside the VPN namespace. If a command is given it runs that command instead and exits when it finishes.
 
 ### Examples
 
