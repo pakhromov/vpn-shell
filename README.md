@@ -4,7 +4,7 @@ Run a shell or a single command inside an isolated network namespace routed thro
 
 ## Demo
 
-![Demo](https://github.com/user-attachments/assets/997ea10c-0e7f-423a-988f-35eb2f943354)
+https://github.com/user-attachments/assets/997ea10c-0e7f-423a-988f-35eb2f943354
 
 The shell on the right pane is never affected by anything happening in the left pane, showing that the VPN is fully isolated to the namespace.
 On the left:
