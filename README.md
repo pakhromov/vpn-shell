@@ -12,23 +12,34 @@ On the left:
 - After `exit` the namespace is torn down and left pane returns to the real IP
 - `vpn-shell curl...` (with a provided command) runs a single `curl` through the VPN and after it is done - the shell is back to the real IP
 
-## How it works
+## Installation
 
-`vpn-shell` creates a Linux network namespace, brings up a WireGuard interface inside it configured from a `.conf` file, and launches a shell (or command) as the original user inside that namespace. When the shell or command exits, the namespace and interface are torn down automatically.
+**AUR (Arch Linux)**
 
-Because it uses a network namespace rather than routing table tricks, the VPN is fully isolated: only the shell or command you explicitly launch inside it goes through the VPN. Everything else on the system continues using the normal network.
-
-The WireGuard interface is configured in the host namespace first (so hostname endpoints resolve via host DNS), then moved into the isolated namespace. Routes are installed from the `AllowedIPs` field of the config, so both full-tunnel (`0.0.0.0/0`) and split-tunnel configurations are supported.
-
-Before handing control to the user, the script sends a probe packet to trigger a WireGuard handshake and waits up to 15 seconds for it to complete. If no handshake is confirmed the script exits with an error rather than silently opening a shell with no VPN.
-
-## Usage
-
-```
-vpn-shell [-c wg.conf] [command...]
+```sh
+yay -S vpn-shell
 ```
 
-Opens an interactive shell inside the VPN namespace. If a command is given it runs that command instead and exits when it finishes.
+**Manual**
+
+Copy the script to any directory in your `$PATH`
+
+### Dependencies
+
+| Package | Purpose |
+|---|---|
+| `bash` | shell interpreter |
+| `wireguard-tools` | `wg` for configuring the WireGuard interface |
+| `iproute2` | `ip` for namespace and routing management |
+| `iputils` | `ping` for triggering the initial handshake |
+| `util-linux` | `runuser` for dropping privileges inside the namespace |
+| `sudo` | privilege escalation for namespace setup |
+
+## Requirements
+
+- Linux kernel with WireGuard support (5.6+)
+- A standard WireGuard `.conf` file compatible with `wg-quick`, as exported by ProtonVPN, Mullvad, or similar (single-peer configs only)
+- `sudo` rights for the invoking user (needed to create and configure network namespaces)
 
 ### Config selection
 
@@ -39,6 +50,14 @@ The config file is resolved in this order:
 3. Auto-detection: if exactly one `.conf` file exists in `~/.config/wireguard/` (respecting `$XDG_CONFIG_HOME`) it is used automatically
 
 If multiple configs are found and none is specified, the script exits with an error listing the directory.
+
+## Usage
+
+```
+vpn-shell [-c wg.conf] [command...]
+```
+
+Opens an interactive shell inside the VPN namespace. If a command is given it runs that command instead and exits when it finishes.
 
 ### Examples
 
@@ -59,23 +78,6 @@ vpn-shell -c ~/.config/wireguard/work.conf ssh internal-host
 export VPN_CONF=~/.config/wireguard/work.conf
 vpn-shell curl -s https://ipinfo.io/json
 ```
-
-### Dependencies
-
-| Package | Purpose |
-|---|---|
-| `bash` | shell interpreter |
-| `wireguard-tools` | `wg` for configuring the WireGuard interface |
-| `iproute2` | `ip` for namespace and routing management |
-| `iputils` | `ping` for triggering the initial handshake |
-| `util-linux` | `runuser` for dropping privileges inside the namespace |
-| `sudo` | privilege escalation for namespace setup |
-
-## Requirements
-
-- Linux kernel with WireGuard support (5.6+)
-- A standard WireGuard `.conf` file compatible with `wg-quick`, as exported by ProtonVPN, Mullvad, or similar (single-peer configs only)
-- `sudo` rights for the invoking user (needed to create and configure network namespaces)
 
 ## Supported config fields
 
@@ -107,3 +109,13 @@ The shell launched inside the namespace starts with a clean environment containi
 | `LANG`, `LC_ALL` | Preserved if set |
 
 The shell's startup files (`.zshrc`, `.bashrc`, etc.) are sourced normally, so your prompt, aliases, and functions are available as usual.
+
+## How it works
+
+`vpn-shell` creates a Linux network namespace, brings up a WireGuard interface inside it configured from a `.conf` file, and launches a shell (or command) as the original user inside that namespace. When the shell or command exits, the namespace and interface are torn down automatically.
+
+Because it uses a network namespace rather than routing table tricks, the VPN is fully isolated: only the shell or command you explicitly launch inside it goes through the VPN. Everything else on the system continues using the normal network.
+
+The WireGuard interface is configured in the host namespace first (so hostname endpoints resolve via host DNS), then moved into the isolated namespace. Routes are installed from the `AllowedIPs` field of the config, so both full-tunnel (`0.0.0.0/0`) and split-tunnel configurations are supported.
+
+Before handing control to the user, the script sends a probe packet to trigger a WireGuard handshake and waits up to 15 seconds for it to complete. If no handshake is confirmed the script exits with an error rather than silently opening a shell with no VPN.
