@@ -1,6 +1,6 @@
 # Maintainer: Pavel Khromov <pakhromov@gmail.com>
 pkgname=vpn-shell
-pkgver=1.0.0
+pkgver=1.0.1
 pkgrel=1
 pkgdesc='Start VPN for a single shell, or run a single command using WireGuard VPN without starting it system-wide'
 arch=(any)
