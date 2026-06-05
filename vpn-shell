@@ -121,7 +121,9 @@ if [[ -n "$dns" ]]; then
     chmod 644 "/etc/netns/$NS/resolv.conf"
 fi
 
-# Trigger initial handshake by sending traffic toward an AllowedIPs address.
+printf 'Waiting for handshake..' >&2
+
+# Trigger initial handshake in the background so the check loop starts immediately.
 # For catch-all entries use RFC-reserved addresses guaranteed to be in range.
 _first_cidr="${allowed%%,*}"
 _first_cidr_ip="${_first_cidr%/*}"
@@ -130,9 +132,7 @@ case "$_first_cidr_ip" in
     ::)      _ping_target="2001:db8::1" ;; # RFC 3849 documentation, within ::/0
     *)       _ping_target="$_first_cidr_ip" ;;
 esac
-ip netns exec "$NS" ping -c1 -W2 -q "$_ping_target" >/dev/null 2>&1 || true
-
-printf 'Waiting for handshake...' >&2
+ip netns exec "$NS" ping -c1 -W2 -q "$_ping_target" >/dev/null 2>&1 &
 _connected=0
 for _ in {1..15}; do
     if ip netns exec "$NS" wg show "$WG" latest-handshakes | grep -Eqv $'^$|\t0$'; then
